@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Domain Safety Check</title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 500px;
+        padding: 30px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      h2 {
+        color: #ff5252;
+        margin-top: 0;
+      }
+      .warning-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+        color: #ff5252;
+      }
+      .domain {
+        font-weight: bold;
+        word-break: break-all;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 15px 0;
+      }
+      .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 25px;
+      }
+      button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+      .continue-whitelist {
+        background-color: #4caf50;
+        color: white;
+      }
+      .continue-whitelist:hover {
+        background-color: #3d8b40;
+      }
+      .continue-only {
+        background-color: #ffc107;
+        color: #333;
+      }
+      .continue-only:hover {
+        background-color: #e0a800;
+      }
+      .exit {
+        background-color: #f44336;
+        color: white;
+      }
+      .exit:hover {
+        background-color: #d32f2f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="warning-icon">&#9888;&#65039;</div>
+      <h2>Non-Whitelisted Domain</h2>
+      <p>You are about to visit a domain that is not in your whitelist:</p>
+      <div class="domain" id="domain-name"></div>
+      <p>This could potentially be a typosquatting or phishing attempt.</p>
+      <div class="buttons">
+        <button class="continue-whitelist" id="whitelist-continue">
+          Whitelist and Continue
+        </button>
+        <button class="continue-only" id="just-continue">
+          Continue Without Whitelisting
+        </button>
+        <button class="exit" id="exit-page">Don't Load This Page</button>
+      </div>
+    </div>
+
+    <script src="browser-polyfill.js"></script>
+    <script src="confirmation.js"></script>
+  </body>
+</html>

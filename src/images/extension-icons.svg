@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Background Shield -->
+  <path d="M64 8 L120 28 L120 58 C120 88 96 112 64 120 C32 112 8 88 8 58 L8 28 Z" fill="#4285f4"/>
+  
+  <!-- Inner Shield -->
+  <path d="M64 20 L108 36 L108 58 C108 82 88 102 64 108 C40 102 20 82 20 58 L20 36 Z" fill="#ffffff"/>
+  
+  <!-- Checkmark -->
+  <path d="M48 64 L60 76 L80 56" stroke="#4CAF50" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- World/Web Icon Representation -->
+  <circle cx="64" cy="64" r="24" fill="none" stroke="#4285f4" stroke-width="4"/>
+  <path d="M64 40 L64 88" stroke="#4285f4" stroke-width="2"/>
+  <path d="M40 64 L88 64" stroke="#4285f4" stroke-width="2"/>
+  <path d="M46 48 C52 54 76 54 82 48" stroke="#4285f4" stroke-width="2" fill="none"/>
+  <path d="M46 80 C52 74 76 74 82 80" stroke="#4285f4" stroke-width="2" fill="none"/>
+  
+  <!-- Red Alert Indicator for Non-whitelisted -->
+  <circle cx="96" cy="32" r="16" fill="#ff5252"/>
+  <text x="96" y="38" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="white">!</text>
+</svg>

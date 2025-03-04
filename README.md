@@ -47,9 +47,11 @@ A browser extension that protects against typosquatting and phishing by showing 
 ### Firefox
 
 1. Download this repository as a ZIP file and unpack it
-2. Go to `about:debugging#/runtime/this-firefox`
-3. Click "Load Temporary Add-on"
-4. Select any file in the unpacked src/ directory
+2. Rename `src/manifest.json` to `src/manifest.chrome.json`
+3. Rename `src/manifest.firefox.json` to `src/manifest.json`
+4. Go to `about:debugging#/runtime/this-firefox`
+5. Click "Load Temporary Add-on"
+6. Select any file in the unpacked src/ directory
 
 ## 🔒 Privacy
 

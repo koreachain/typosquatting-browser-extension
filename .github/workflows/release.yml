@@ -1,0 +1,134 @@
+name: Browser Extension Build and Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate Source Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Validate source files
+        run: node scripts/build.js validate
+
+  build:
+    needs: validate
+    name: Build Browser Extensions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Build ${{ matrix.browser }} extension
+        run: node scripts/build.js build
+
+      - name: Upload ${{ matrix.browser }} extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.browser }}-extension
+          path: dist/${{ matrix.browser }}-extension.zip
+          retention-days: 5
+
+  release:
+    needs: build
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Chrome Extension
+        uses: actions/download-artifact@v4
+        with:
+          name: chrome-extension
+          path: dist
+
+      - name: Download Firefox Extension
+        uses: actions/download-artifact@v4
+        with:
+          name: firefox-extension
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/chrome-extension.zip
+            dist/firefox-extension.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # publish-chrome:
+  #   needs: release
+  #   name: Publish to Chrome Web Store
+  #   runs-on: ubuntu-latest
+  #   if: startsWith(github.ref, 'refs/tags/v')
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Download Chrome Extension
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: chrome-extension
+  #         path: dist
+  #     
+  #     - name: Publish to Chrome Web Store
+  #       uses: mobilefirstllc/cws-publish@latest
+  #       with:
+  #         action: 'publish'
+  #         client_id: ${{ secrets.CHROME_CLIENT_ID }}
+  #         client_secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+  #         refresh_token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+  #         extension_id: ${{ secrets.CHROME_EXTENSION_ID }}
+  #         zip_file: dist/chrome-extension.zip
+  #
+  # publish-firefox:
+  #   needs: release
+  #   name: Publish to Firefox Add-ons
+  #   runs-on: ubuntu-latest
+  #   if: startsWith(github.ref, 'refs/tags/v')
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Download Firefox Extension
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: firefox-extension
+  #         path: dist
+  #     
+  #     - name: Submit to Firefox Add-ons
+  #       uses: trmcnvn/firefox-addon@v1
+  #       with:
+  #         api-key: ${{ secrets.FIREFOX_JWT_ISSUER }}
+  #         api-secret: ${{ secrets.FIREFOX_JWT_SECRET }}
+  #         uuid: ${{ secrets.FIREFOX_EXTENSION_UUID }}
+  #         xpi: dist/firefox-extension.zip
+  #         manifest: src/manifest.firefox.json

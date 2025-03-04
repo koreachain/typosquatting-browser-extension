@@ -84,9 +84,9 @@ domain-whitelist-protector/src/
 git clone https://github.com/infnada/typosquatting-protect.git
 
 # Navigate to the directory
-cd domain-whitelist-protector
+cd typosquatting-protect
 
-# Build the extension (if needed)
+# Build the extension
 node scripts/build.js build
 ```
 

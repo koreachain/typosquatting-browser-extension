@@ -36,6 +36,22 @@ function getDomain(url) {
   }
 }
 
+function isWhitelisted(domain, whitelist) {
+  // Direct match
+  if (whitelist.includes(domain)) {
+    return true;
+  }
+
+  // Check for wildcard matches
+  for (const entry of whitelist) {
+    if (entry.startsWith("*.") && domain.endsWith(entry.substring(2))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function checkTabNavigation(tabId, url) {
   browserAPI.storage.local.get(
     ["whitelist", "enablePreemptiveChecks"],
@@ -61,7 +77,7 @@ function checkTabNavigation(tabId, url) {
 
       // Skip whitelisted domains and session-allowed domains
       if (
-        whitelist.includes(domain) ||
+        isWhitelisted(domain, whitelist) ||
         sessionAllowedDomains.includes(domain)
       ) {
         return;

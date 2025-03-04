@@ -21,6 +21,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   document
+    .getElementById("wildcard-continue")
+    .addEventListener("click", function () {
+      // Get root domain for wildcard
+      const domainParts = domain.split(".");
+      let rootDomain = domain;
+      if (domainParts.length > 2) {
+        rootDomain = domainParts.slice(domainParts.length - 2).join(".");
+      }
+
+      browserAPI.runtime.sendMessage({
+        action: "whitelistAndContinue",
+        domain: `*.${rootDomain}`,
+        url: url,
+        tabId: tabId,
+      });
+    });
+
+  document
     .getElementById("just-continue")
     .addEventListener("click", function () {
       browserAPI.runtime.sendMessage({

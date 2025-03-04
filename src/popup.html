@@ -57,6 +57,19 @@
         justify-content: space-between;
         align-items: center;
       }
+      li .domain-entry {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      li .wildcard-badge {
+        background-color: #4285f4;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+      }
       li:last-child {
         border-bottom: none;
       }
@@ -143,7 +156,11 @@
     </div>
 
     <div class="container">
-      <input type="text" id="new-domain" placeholder="e.g., example.com" />
+      <input
+        type="text"
+        id="new-domain"
+        placeholder="e.g., example.com, *.example.com"
+      />
       <button id="add-domain">Add</button>
     </div>
 

@@ -1,12 +1,30 @@
 // Use the appropriate API based on browser environment
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
-
 let warningBar = null;
 
 function getDomain(url) {
-  const a = document.createElement("a");
-  a.href = url;
-  return a.hostname;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (e) {
+    return "";
+  }
+}
+
+function isWhitelisted(domain, whitelist) {
+  // Direct match
+  if (whitelist.includes(domain)) {
+    return true;
+  }
+
+  // Check for wildcard matches
+  for (const entry of whitelist) {
+    if (entry.startsWith("*.") && domain.endsWith(entry.substring(2))) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function createWarningBar(domain) {
@@ -15,12 +33,20 @@ function createWarningBar(domain) {
     warningBar.remove();
   }
 
-  // Create warning bar
+  // Get root domain for wildcard suggestion
+  const domainParts = domain.split(".");
+  let rootDomain = domain;
+  if (domainParts.length > 2) {
+    rootDomain = domainParts.slice(domainParts.length - 2).join(".");
+  }
+
+  // Create warning bar with added wildcard option
   warningBar = document.createElement("div");
   warningBar.id = "whitelist-warning-bar";
   warningBar.innerHTML = `
     <span class="warning-text">⚠️ Non-whitelisted domain: <strong>${domain}</strong> could be insecure</span>
     <button id="whitelist-btn">Whitelist this domain</button>
+    <button id="wildcard-whitelist-btn">Whitelist *.${rootDomain}</button>
     <button id="close-warning-btn">×</button>
   `;
 
@@ -39,6 +65,21 @@ function createWarningBar(domain) {
     });
   });
 
+  // Add wildcard whitelist button listener
+  document
+    .getElementById("wildcard-whitelist-btn")
+    .addEventListener("click", () => {
+      browserAPI.storage.local.get(["whitelist"], (result) => {
+        const whitelist = result.whitelist || [];
+        const wildcardDomain = `*.${rootDomain}`;
+        if (!whitelist.includes(wildcardDomain)) {
+          whitelist.push(wildcardDomain);
+          browserAPI.storage.local.set({ whitelist });
+        }
+        warningBar.remove();
+      });
+    });
+
   document.getElementById("close-warning-btn").addEventListener("click", () => {
     warningBar.remove();
   });
@@ -46,10 +87,12 @@ function createWarningBar(domain) {
 
 function checkDomain() {
   const currentDomain = getDomain(window.location.href);
+  console.log(currentDomain);
 
   browserAPI.storage.local.get(["whitelist"], (result) => {
     const whitelist = result.whitelist || [];
-    if (!whitelist.includes(currentDomain)) {
+
+    if (!isWhitelisted(currentDomain, whitelist)) {
       createWarningBar(currentDomain);
     }
   });

@@ -75,7 +75,23 @@ function loadWhitelist() {
 
     whitelist.forEach(function (domain) {
       const li = document.createElement("li");
-      li.textContent = domain;
+
+      const domainEntry = document.createElement("div");
+      domainEntry.className = "domain-entry";
+
+      // Text for the domain
+      const domainText = document.createTextNode(domain);
+      domainEntry.appendChild(domainText);
+
+      // Add wildcard badge if it's a wildcard domain
+      if (domain.startsWith("*.")) {
+        const badge = document.createElement("span");
+        badge.className = "wildcard-badge";
+        badge.textContent = "WILDCARD";
+        domainEntry.appendChild(badge);
+      }
+
+      li.appendChild(domainEntry);
 
       const removeButton = document.createElement("button");
       removeButton.textContent = "Remove";

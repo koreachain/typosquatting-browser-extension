@@ -33,7 +33,7 @@ A browser extension that protects against typosquatting and phishing by showing 
 
 ### Mozilla Add-ons
 
-[![Firefox Add-ons](assets/download-firefox.svg)](https://addons.mozilla.org/en-US/firefox/)
+[![Firefox Add-ons](assets/download-firefox.svg)](https://addons.mozilla.org/en-US/firefox/addon/domain-whitelist-protector/)
 
 ## 🛠️ Manual Installation
 

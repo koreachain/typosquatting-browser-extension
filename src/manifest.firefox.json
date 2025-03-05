@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Domain Whitelist Protector",
-  "version": "2.0",
+  "version": "2.1",
   "description": "Protects against typosquatting and phishing with Geolocation checks by showing warnings for non-whitelisted domains",
   "permissions": [
     "storage",

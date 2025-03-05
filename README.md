@@ -6,7 +6,7 @@ A browser extension that protects against typosquatting and phishing by showing 
 
 ## 🛡️ Features
 
-- **Preemptive Domain Protection**: Get alerted before visiting non-whitelisted domains
+- **Preemptive Domain Protection**: Get alerted before visiting non-whitelisted domains or blocked countries
 - **Visual Warning Bar**: See a clear red warning banner on non-whitelisted websites
 - **Flexible Configuration**: Choose to whitelist domains permanently or allow temporarily for a session
 - **Import/Export Functionality**: Easily backup and transfer your whitelist between devices
@@ -14,9 +14,9 @@ A browser extension that protects against typosquatting and phishing by showing 
 
 ## 📸 Screenshots
 
-| Warning Bar                            | Confirmation Page                             | Settings Panel                                |
-| -------------------------------------- | --------------------------------------------- | --------------------------------------------- |
-| ![Warning Bar](assets/warning-bar.png) | ![Confirmation Page](assets/confirmation.png) | ![Settings Panel](assets/settings-pannel.png) |
+| Warning Bar                            | Confirmation Page                             | Country Blocked Page                     | Settings Panel                                |
+| -------------------------------------- | --------------------------------------------- | ---------------------------------------- | --------------------------------------------- |
+| ![Warning Bar](assets/warning-bar.png) | ![Confirmation Page](assets/confirmation.png) | ![Confirmation Page](assets/blocked.png) | ![Settings Panel](assets/settings-pannel.png) |
 
 ## 🔍 How It Works
 

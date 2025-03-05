@@ -21,14 +21,12 @@ function createDirectories() {
 // Copy shared files
 function copySharedFiles() {
   const filesToCopy = [
-    "popup.html",
-    "popup.js",
     "content.js",
     "styles.css",
     "confirmation.html",
     "confirmation.js",
   ];
-  const directoriesToCopy = ["images"];
+  const directoriesToCopy = ["images", "popup"];
   // Copy individual files
   filesToCopy.forEach((file) => {
     const sourcePath = path.join(SOURCE_DIR, file);
@@ -164,8 +162,8 @@ function validateSource() {
   const requiredFiles = [
     "manifest.json",
     "manifest.firefox.json",
-    "popup.html",
-    "popup.js",
+    "popup/popup.html",
+    "popup/popup.js",
     "content.js",
     "styles.css",
     "background.js",

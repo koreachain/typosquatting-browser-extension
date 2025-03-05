@@ -54,8 +54,10 @@ function createWarningBar(domain) {
   document.body.insertBefore(warningBar, document.body.firstChild);
 
   // Add event listeners
-  document.getElementById("whitelist-btn").addEventListener("click", () => {
-    browserAPI.storage.local.get(["whitelist"], (result) => {
+  document
+    .getElementById("whitelist-btn")
+    .addEventListener("click", async () => {
+      const result = await browserAPI.storage.local.get(["whitelist"]);
       const whitelist = result.whitelist || [];
       if (!whitelist.includes(domain)) {
         whitelist.push(domain);
@@ -63,21 +65,19 @@ function createWarningBar(domain) {
       }
       warningBar.remove();
     });
-  });
 
   // Add wildcard whitelist button listener
   document
     .getElementById("wildcard-whitelist-btn")
     .addEventListener("click", () => {
-      browserAPI.storage.local.get(["whitelist"], (result) => {
-        const whitelist = result.whitelist || [];
-        const wildcardDomain = `*.${rootDomain}`;
-        if (!whitelist.includes(wildcardDomain)) {
-          whitelist.push(wildcardDomain);
-          browserAPI.storage.local.set({ whitelist });
-        }
-        warningBar.remove();
-      });
+      const result = browserAPI.storage.local.get(["whitelist"]);
+      const whitelist = result.whitelist || [];
+      const wildcardDomain = `*.${rootDomain}`;
+      if (!whitelist.includes(wildcardDomain)) {
+        whitelist.push(wildcardDomain);
+        browserAPI.storage.local.set({ whitelist });
+      }
+      warningBar.remove();
     });
 
   document.getElementById("close-warning-btn").addEventListener("click", () => {
@@ -85,17 +85,15 @@ function createWarningBar(domain) {
   });
 }
 
-function checkDomain() {
+async function checkDomain() {
   const currentDomain = getDomain(window.location.href);
-  console.log(currentDomain);
 
-  browserAPI.storage.local.get(["whitelist"], (result) => {
-    const whitelist = result.whitelist || [];
+  const result = await browserAPI.storage.local.get(["whitelist"]);
+  const whitelist = result.whitelist || [];
 
-    if (!isWhitelisted(currentDomain, whitelist)) {
-      createWarningBar(currentDomain);
-    }
-  });
+  if (!isWhitelisted(currentDomain, whitelist)) {
+    createWarningBar(currentDomain);
+  }
 }
 
 // Wait for the DOM to be ready

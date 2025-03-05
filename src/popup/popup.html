@@ -1,0 +1,289 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Domain Whitelist Protector</title>
+    <style>
+      body {
+        width: 400px;
+        padding: 15px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .tab-container {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+      }
+      .tab {
+        padding: 10px 15px;
+        cursor: pointer;
+        background-color: #f8f9fa;
+        border: 1px solid #eee;
+        border-bottom: none;
+        margin-right: 5px;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+      .tab.active {
+        background-color: white;
+        border-color: #eee;
+        border-bottom: 1px solid white;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .container {
+        display: flex;
+        margin-bottom: 10px;
+      }
+      #new-domain {
+        flex-grow: 1;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+      button:hover {
+        background-color: #3367d6;
+      }
+      .full-width-btn {
+        width: 100%;
+        margin: 10px 0;
+        margin-left: 0;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        margin-top: 15px;
+      }
+      li {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      li .domain-entry {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      li .wildcard-badge {
+        background-color: #4285f4;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: bold;
+      }
+      li:last-child {
+        border-bottom: none;
+      }
+      .remove-btn {
+        background-color: #dc3545;
+        padding: 3px 8px;
+      }
+      .empty-list {
+        padding: 15px;
+        text-align: center;
+        color: #777;
+      }
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #eee;
+      }
+      .toggle-label {
+        flex-grow: 1;
+      }
+      .toggle {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+      }
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #4285f4;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+      .section-title {
+        margin-top: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+      }
+      #country-select {
+        max-width: calc(100% - 120px);
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 5px;
+      }
+      #country-select option {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .about-content {
+        text-align: center;
+        padding: 20px;
+      }
+      .about-content h3 {
+        margin-bottom: 15px;
+      }
+      .about-content p {
+        margin-bottom: 15px;
+        line-height: 1.6;
+      }
+      .github-link {
+        display: inline-block;
+        background-color: #4285f4;
+        color: white;
+        padding: 10px 15px;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+      .github-link:hover {
+        background-color: #3367d6;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Domain Whitelist Protector</h2>
+
+    <div class="tab-container">
+      <div class="tab active" data-tab="domains">Domains</div>
+      <div class="tab" data-tab="country">Country Blocking</div>
+      <div class="tab" data-tab="import-export">Import/Export</div>
+      <div class="tab" data-tab="about">About</div>
+    </div>
+
+    <div id="domains" class="tab-content active">
+      <div class="toggle-container">
+        <div class="toggle-label">
+          <strong>Preemptive Domain Checks</strong>
+          <div>Check domains before loading pages</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="preemptive-check-toggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="container">
+        <input
+          type="text"
+          id="new-domain"
+          placeholder="e.g., example.com, *.example.com"
+        />
+        <button id="add-domain">Add</button>
+      </div>
+
+      <div class="container">
+        <button id="add-current" class="full-width-btn">
+          Add Current Domain
+        </button>
+      </div>
+
+      <h3 class="section-title">Whitelisted Domains:</h3>
+      <ul id="whitelist"></ul>
+    </div>
+
+    <div id="country" class="tab-content">
+      <h3 class="section-title">Country Blocking</h3>
+      <div class="container">
+        <select id="country-select">
+          <option value="">Select Country to Block</option>
+        </select>
+        <button id="block-country">Block Country</button>
+      </div>
+      <ul id="blocked-countries"></ul>
+    </div>
+
+    <div id="import-export" class="tab-content">
+      <h3 class="section-title">Import/Export</h3>
+      <button id="export-data" class="full-width-btn">Export Data</button>
+      <button id="import-data" class="full-width-btn">Import Data</button>
+      <input type="file" id="import-file" style="display: none" />
+    </div>
+
+    <div id="about" class="tab-content">
+      <div class="about-content">
+        <h3>Domain Whitelist Protector</h3>
+        <p>
+          A browser extension that helps you manage and protect your browsing
+          experience by allowing you to whitelist domains and block potentially
+          risky content.
+        </p>
+        <a
+          href="https://github.com/infnada/typosquatting-protect"
+          class="github-link"
+          target="_blank"
+        >
+          View on GitHub
+        </a>
+      </div>
+    </div>
+
+    <script src="browser-polyfill.js"></script>
+    <script src="popup.js"></script>
+    <script src="whitelist.js"></script>
+    <script src="import-export.js"></script>
+    <script src="country.js"></script>
+  </body>
+</html>

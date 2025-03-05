@@ -6,17 +6,16 @@ let sessionAllowedDomains = [];
 
 browserAPI.runtime.onInstalled.addListener(() => {
   // Initialize with empty whitelist and enabled preemptive checks
-  browserAPI.storage.local.get(
-    ["whitelist", "enablePreemptiveChecks"],
-    (result) => {
-      if (!result.whitelist) {
-        browserAPI.storage.local.set({ whitelist: [] });
-      }
-      if (result.enablePreemptiveChecks === undefined) {
-        browserAPI.storage.local.set({ enablePreemptiveChecks: true });
-      }
-    },
-  );
+  const result = browserAPI.storage.local.get([
+    "whitelist",
+    "enablePreemptiveChecks",
+  ]);
+  if (!result.whitelist) {
+    browserAPI.storage.local.set({ whitelist: [] });
+  }
+  if (result.enablePreemptiveChecks === undefined) {
+    browserAPI.storage.local.set({ enablePreemptiveChecks: true });
+  }
 });
 
 // Listen for tab updates
@@ -26,6 +25,39 @@ browserAPI.webNavigation.onCommitted.addListener((details) => {
     checkTabNavigation(details.tabId, details.url);
   }
 });
+
+// Geolocation Checks
+async function checkIPGeolocation(url) {
+  try {
+    const hostname = new URL(url).hostname;
+    const response = await fetch(`http://ip-api.com/json/${hostname}`);
+    const data = await response.json();
+
+    return {
+      country: data.country,
+      countryCode: data.countryCode,
+      region: data.regionName,
+      city: data.city,
+      ip: data.query,
+      isp: data.isp,
+      risk: await assessGeographicalRisk(data.countryCode),
+    };
+  } catch (error) {
+    return {
+      error: "Geolocation lookup failed",
+    };
+  }
+}
+
+async function assessGeographicalRisk(countryCode) {
+  const result = await browserAPI.storage.local.get(["blockedCountries"]);
+  const blockedCountries = result.blockedCountries || [];
+
+  if (blockedCountries.map((c) => JSON.parse(c).code).includes(countryCode)) {
+    return "High";
+  }
+  return "Low";
+}
 
 function getDomain(url) {
   try {
@@ -52,45 +84,42 @@ function isWhitelisted(domain, whitelist) {
   return false;
 }
 
-function checkTabNavigation(tabId, url) {
-  browserAPI.storage.local.get(
-    ["whitelist", "enablePreemptiveChecks"],
-    (result) => {
-      if (!result.enablePreemptiveChecks) {
-        return;
-      }
+async function checkTabNavigation(tabId, url) {
+  const result = await browserAPI.storage.local.get([
+    "whitelist",
+    "enablePreemptiveChecks",
+  ]);
+  if (!result.enablePreemptiveChecks) return;
 
-      const whitelist = result.whitelist || [];
-      const domain = getDomain(url);
+  const whitelist = result.whitelist || [];
+  const domain = getDomain(url);
 
-      // Skip about:, chrome:, moz:, file: and empty URLs
-      if (
-        !domain ||
-        url.startsWith("about:") ||
-        url.startsWith("chrome:") ||
-        url.startsWith("moz:") ||
-        url.startsWith("file:") ||
-        url.includes("confirmation.html")
-      ) {
-        return;
-      }
+  // Skip about:, chrome:, moz:, file: and empty URLs
+  if (
+    !domain ||
+    url.startsWith("about:") ||
+    url.startsWith("chrome:") ||
+    url.startsWith("moz:") ||
+    url.startsWith("file:") ||
+    url.includes("confirmation.html")
+  ) {
+    return;
+  }
 
-      // Skip whitelisted domains and session-allowed domains
-      if (
-        isWhitelisted(domain, whitelist) ||
-        sessionAllowedDomains.includes(domain)
-      ) {
-        return;
-      }
+  // Skip whitelisted domains and session-allowed domains
+  if (
+    isWhitelisted(domain, whitelist) ||
+    sessionAllowedDomains.includes(domain)
+  ) {
+    return;
+  }
 
-      // Create a confirmation popup
-      browserAPI.tabs.update(tabId, {
-        url: browserAPI.runtime.getURL(
-          `confirmation.html?domain=${encodeURIComponent(domain)}&url=${encodeURIComponent(url)}&tabId=${tabId}`,
-        ),
-      });
-    },
-  );
+  // Create a confirmation popup
+  browserAPI.tabs.update(tabId, {
+    url: browserAPI.runtime.getURL(
+      `confirmation.html?domain=${encodeURIComponent(domain)}&url=${encodeURIComponent(url)}&tabId=${tabId}`,
+    ),
+  });
 }
 
 // Listen for messages from confirmation.html
@@ -104,11 +133,11 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     browserAPI.tabs.update(message.tabId, { url: message.url });
   } else if (message.action === "whitelistAndContinue") {
     // Add domain to global whitelist
-    browserAPI.storage.local.get(["whitelist"], (result) => {
+    browserAPI.storage.local.get(["whitelist"]).then((result) => {
       const whitelist = result.whitelist || [];
       if (!whitelist.includes(message.domain)) {
         whitelist.push(message.domain);
-        browserAPI.storage.local.set({ whitelist }, () => {
+        browserAPI.storage.local.set({ whitelist }).then(() => {
           browserAPI.tabs.update(message.tabId, { url: message.url });
         });
       } else {
@@ -119,6 +148,16 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     browserAPI.tabs.remove(message.tabId);
   } else if (message.action === "togglePreemptiveChecks") {
     browserAPI.storage.local.set({ enablePreemptiveChecks: message.enabled });
+  } else if (message.action === "securityCheck") {
+    // Handle security check requests
+    Promise.all([checkIPGeolocation(message.url)])
+      .then(([geoCheck]) => {
+        sendResponse({ geo: geoCheck });
+      })
+      .catch((error) => {
+        sendResponse({ error: error.message });
+      });
+    return true;
   }
 });
 

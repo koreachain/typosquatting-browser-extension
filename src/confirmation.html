@@ -83,15 +83,23 @@
       .exit:hover {
         background-color: #d32f2f;
       }
+      .security-details {
+        background-color: #f1f1f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        text-align: left;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="warning-icon">&#9888;&#65039;</div>
-      <h2>Non-Whitelisted Domain</h2>
+      <div class="warning-icon" id="icon">&#9888;&#65039;</div>
+      <h2 id="title">Non-Whitelisted Domain</h2>
       <p>You are about to visit a domain that is not in your whitelist:</p>
       <div class="domain" id="domain-name"></div>
       <p>This could potentially be a typosquatting or phishing attempt.</p>
+      <div class="security-details" id="security-details"></div>
       <div class="buttons">
         <button class="continue-whitelist" id="whitelist-continue">
           Whitelist and Continue

@@ -19,21 +19,30 @@ document.addEventListener("DOMContentLoaded", async function () {
   });
 
   if (response && response.geo) {
-    if (response.geo.risk === "High") {
-      document.getElementById("icon").textContent = "❗";
-      document.getElementById("title").textContent = "Blocked Country";
+    if (response.geo.status === "disabled") {
       detailsElement.innerHTML = `
+        <p>
+          Geolocation checks disabled
+        </p>
+      `;
+    }
+
+    if (response.geo.status === "enabled" && response.geo) {
+      if (response.geo.risk === "High") {
+        document.getElementById("icon").textContent = "❗";
+        document.getElementById("title").textContent = "Blocked Country";
+        detailsElement.innerHTML = `
         <p>
           <strong>Geographical Risk Warning</strong><br>
           This domain originates from a country which you explicitly block.
         </p>
       `;
 
-      document.getElementById("wildcard-continue").remove();
-      document.getElementById("just-continue").remove();
-    }
+        document.getElementById("wildcard-continue").remove();
+        document.getElementById("just-continue").remove();
+      }
 
-    detailsElement.innerHTML += `
+      detailsElement.innerHTML += `
       <p>
       <strong>Geolocation:</strong>
       <br>Country: ${response.geo.country || "Unknown"}
@@ -43,6 +52,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       <br>Risk Level: <strong>${response.geo.risk || "Unknown"}</strong>
       </p>
     `;
+    }
   }
 
   document
@@ -56,9 +66,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
     });
 
-  document
-    .getElementById("wildcard-continue")
-    .addEventListener("click", function () {
+  const wcelement = document.getElementById("wildcard-continue");
+  wcelement &&
+    wcelement.addEventListener("click", function () {
       // Get root domain for wildcard
       const domainParts = domain.split(".");
       let rootDomain = domain;
@@ -74,9 +84,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       });
     });
 
-  document
-    .getElementById("just-continue")
-    .addEventListener("click", function () {
+  const jcelement = document.getElementById("just-continue");
+  jcelement &&
+    jcelement.addEventListener("click", function () {
       browserAPI.runtime.sendMessage({
         action: "continueNavigation",
         domain: domain,

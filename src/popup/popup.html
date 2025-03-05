@@ -201,6 +201,11 @@
       .github-link:hover {
         background-color: #3367d6;
       }
+      .warning {
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 10px;
+      }
     </style>
   </head>
   <body>
@@ -246,6 +251,35 @@
 
     <div id="country" class="tab-content">
       <h3 class="section-title">Country Blocking</h3>
+      <div class="warning">
+        <div class="warning-icon">
+          &#9888;&#65039; Currently, this extension uses a plain HTTP request to
+          ip-api.com to retrieve geographical data for the
+          <strong>non whitelisted</strong> domains you access. This approach
+          presents potential security and privacy risks:
+        </div>
+        <ul>
+          <li>
+            Network interceptors could potentially view the domains you are
+            accessing
+          </li>
+          <li>
+            The ip-api.com service provider might track domain requests based on
+            source IP address
+          </li>
+        </ul>
+        <p>Please note: We have no affiliation or agreement with ip-api.com.</p>
+      </div>
+      <div class="toggle-container">
+        <div class="toggle-label">
+          <strong>Disable Country Checks</strong>
+          <div>This will stop requests to ip-api.com</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="country-block-toggle" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
       <div class="container">
         <select id="country-select">
           <option value="">Select Country to Block</option>

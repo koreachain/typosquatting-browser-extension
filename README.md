@@ -108,7 +108,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 🙏 Acknowledgements
 
-- 99% of this extension was made by claude.ai
+- Initial release of this extension was made 99% by claude.ai
 - Everyone who has contributed to the project
 
 ---

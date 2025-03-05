@@ -2,6 +2,7 @@
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
 let enablePreemptiveChecks = true;
+let enableCountryBlock = true;
 let sessionAllowedDomains = [];
 
 browserAPI.runtime.onInstalled.addListener(() => {
@@ -16,6 +17,9 @@ browserAPI.runtime.onInstalled.addListener(() => {
   if (result.enablePreemptiveChecks === undefined) {
     browserAPI.storage.local.set({ enablePreemptiveChecks: true });
   }
+  if (result.enableCountryBlock === undefined) {
+    browserAPI.storage.local.set({ enableCountryBlock: true });
+  }
 });
 
 // Listen for tab updates
@@ -28,12 +32,20 @@ browserAPI.webNavigation.onCommitted.addListener((details) => {
 
 // Geolocation Checks
 async function checkIPGeolocation(url) {
+  const result = await browserAPI.storage.local.get(["enableCountryBlock"]);
+  if (!result.enableCountryBlock) {
+    return {
+      status: "disabled",
+    };
+  }
+
   try {
     const hostname = new URL(url).hostname;
     const response = await fetch(`http://ip-api.com/json/${hostname}`);
     const data = await response.json();
 
     return {
+      status: "enabled",
       country: data.country,
       countryCode: data.countryCode,
       region: data.regionName,
@@ -148,6 +160,8 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     browserAPI.tabs.remove(message.tabId);
   } else if (message.action === "togglePreemptiveChecks") {
     browserAPI.storage.local.set({ enablePreemptiveChecks: message.enabled });
+  } else if (message.action === "toggleCountryBlock") {
+    browserAPI.storage.local.set({ enableCountryBlock: message.enabled });
   } else if (message.action === "securityCheck") {
     // Handle security check requests
     Promise.all([checkIPGeolocation(message.url)])

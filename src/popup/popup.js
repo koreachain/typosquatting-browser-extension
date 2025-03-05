@@ -50,6 +50,12 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("change", function () {
       togglePreemptiveChecks(this.checked);
     });
+  // CountryBlock check toggle
+  document
+    .getElementById("country-block-toggle")
+    .addEventListener("change", function () {
+      toggleCountryBlock(this.checked);
+    });
 
   // Load countries selector
   loadCountries();
@@ -87,16 +93,28 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function loadToggleState() {
-  const result = await browserAPI.storage.local.get(["enablePreemptiveChecks"]);
+  const result = await browserAPI.storage.local.get([
+    "enablePreemptiveChecks",
+    "enableCountryBlock",
+  ]);
   document.getElementById("preemptive-check-toggle").checked =
     result.enablePreemptiveChecks === undefined
       ? true
       : result.enablePreemptiveChecks;
+  document.getElementById("country-block-toggle").checked =
+    result.enableCountryBlock === undefined ? true : result.enableCountryBlock;
 }
 
 function togglePreemptiveChecks(enabled) {
   browserAPI.runtime.sendMessage({
     action: "togglePreemptiveChecks",
+    enabled: enabled,
+  });
+}
+
+function toggleCountryBlock(enabled) {
+  browserAPI.runtime.sendMessage({
+    action: "toggleCountryBlock",
     enabled: enabled,
   });
 }

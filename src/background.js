@@ -7,18 +7,18 @@ let sessionAllowedDomains = [];
 
 browserAPI.runtime.onInstalled.addListener(() => {
   // Initialize with empty whitelist and enabled preemptive checks
-  const result = browserAPI.storage.local.get([
+  const result = browserAPI.storage.sync.get([
     "whitelist",
     "enablePreemptiveChecks",
   ]);
   if (!result.whitelist) {
-    browserAPI.storage.local.set({ whitelist: [] });
+    browserAPI.storage.sync.set({ whitelist: [] });
   }
   if (result.enablePreemptiveChecks === undefined) {
-    browserAPI.storage.local.set({ enablePreemptiveChecks: true });
+    browserAPI.storage.sync.set({ enablePreemptiveChecks: true });
   }
   if (result.enableCountryBlock === undefined) {
-    browserAPI.storage.local.set({ enableCountryBlock: true });
+    browserAPI.storage.sync.set({ enableCountryBlock: true });
   }
 });
 
@@ -32,7 +32,7 @@ browserAPI.webNavigation.onCommitted.addListener((details) => {
 
 // Geolocation Checks
 async function checkIPGeolocation(url) {
-  const result = await browserAPI.storage.local.get(["enableCountryBlock"]);
+  const result = await browserAPI.storage.sync.get(["enableCountryBlock"]);
   if (!result.enableCountryBlock) {
     return {
       status: "disabled",
@@ -62,7 +62,7 @@ async function checkIPGeolocation(url) {
 }
 
 async function assessGeographicalRisk(countryCode) {
-  const result = await browserAPI.storage.local.get(["blockedCountries"]);
+  const result = await browserAPI.storage.sync.get(["blockedCountries"]);
   const blockedCountries = result.blockedCountries || [];
 
   if (blockedCountries.map((c) => JSON.parse(c).code).includes(countryCode)) {
@@ -97,7 +97,7 @@ function isWhitelisted(domain, whitelist) {
 }
 
 async function checkTabNavigation(tabId, url) {
-  const result = await browserAPI.storage.local.get([
+  const result = await browserAPI.storage.sync.get([
     "whitelist",
     "enablePreemptiveChecks",
   ]);
@@ -145,11 +145,11 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     browserAPI.tabs.update(message.tabId, { url: message.url });
   } else if (message.action === "whitelistAndContinue") {
     // Add domain to global whitelist
-    browserAPI.storage.local.get(["whitelist"]).then((result) => {
+    browserAPI.storage.sync.get(["whitelist"]).then((result) => {
       const whitelist = result.whitelist || [];
       if (!whitelist.includes(message.domain)) {
         whitelist.push(message.domain);
-        browserAPI.storage.local.set({ whitelist }).then(() => {
+        browserAPI.storage.sync.set({ whitelist }).then(() => {
           browserAPI.tabs.update(message.tabId, { url: message.url });
         });
       } else {
@@ -159,9 +159,9 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === "exitNavigation") {
     browserAPI.tabs.remove(message.tabId);
   } else if (message.action === "togglePreemptiveChecks") {
-    browserAPI.storage.local.set({ enablePreemptiveChecks: message.enabled });
+    browserAPI.storage.sync.set({ enablePreemptiveChecks: message.enabled });
   } else if (message.action === "toggleCountryBlock") {
-    browserAPI.storage.local.set({ enableCountryBlock: message.enabled });
+    browserAPI.storage.sync.set({ enableCountryBlock: message.enabled });
   } else if (message.action === "securityCheck") {
     // Handle security check requests
     Promise.all([checkIPGeolocation(message.url)])

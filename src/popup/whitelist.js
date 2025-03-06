@@ -1,5 +1,5 @@
 async function loadWhitelist() {
-  const result = await browserAPI.storage.local.get(["whitelist"]);
+  const result = await browserAPI.storage.sync.get(["whitelist"]);
   const whitelist = result.whitelist || [];
   const whitelistElement = document.getElementById("whitelist");
   whitelistElement.innerHTML = "";
@@ -64,11 +64,11 @@ async function addDomain() {
   // Remove path and query parameters if present
   domain = domain.split("/")[0];
 
-  const result = await browserAPI.storage.local.get(["whitelist"]);
+  const result = await browserAPI.storage.sync.get(["whitelist"]);
   const whitelist = result.whitelist || [];
   if (!whitelist.includes(domain)) {
     whitelist.push(domain);
-    await browserAPI.storage.local.set({ whitelist: whitelist });
+    await browserAPI.storage.sync.set({ whitelist: whitelist });
     input.value = "";
     loadWhitelist();
   } else {
@@ -86,11 +86,11 @@ async function addCurrentDomain() {
     const url = new URL(tabs[0].url);
     const domain = url.hostname;
 
-    const result = await browserAPI.storage.local.get(["whitelist"]);
+    const result = await browserAPI.storage.sync.get(["whitelist"]);
     const whitelist = result.whitelist || [];
     if (!whitelist.includes(domain)) {
       whitelist.push(domain);
-      await browserAPI.storage.local.set({ whitelist: whitelist });
+      await browserAPI.storage.sync.set({ whitelist: whitelist });
       loadWhitelist();
     } else {
       alert("This domain is already in your whitelist.");
@@ -99,9 +99,9 @@ async function addCurrentDomain() {
 }
 
 async function removeDomain(domain) {
-  const result = await browserAPI.storage.local.get(["whitelist"]);
+  const result = await browserAPI.storage.sync.get(["whitelist"]);
   let whitelist = result.whitelist || [];
   whitelist = whitelist.filter((d) => d !== domain);
-  await browserAPI.storage.local.set({ whitelist: whitelist });
+  await browserAPI.storage.sync.set({ whitelist: whitelist });
   loadWhitelist();
 }

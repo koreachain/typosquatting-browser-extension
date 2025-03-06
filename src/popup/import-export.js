@@ -1,7 +1,7 @@
 async function exportData() {
-  const resultWhiteList = await browserAPI.storage.local.get(["whitelist"]);
+  const resultWhiteList = await browserAPI.storage.sync.get(["whitelist"]);
   const whitelist = resultWhiteList.whitelist || [];
-  const resultCountryBlock = await browserAPI.storage.local.get([
+  const resultCountryBlock = await browserAPI.storage.sync.get([
     "blockedCountries",
   ]);
   const countryBlock = resultCountryBlock.blockedCountries || [];
@@ -43,7 +43,7 @@ function importData(event) {
         return;
       }
 
-      const result = await browserAPI.storage.local.get([
+      const result = await browserAPI.storage.sync.get([
         "whitelist",
         "blockedCountries",
       ]);
@@ -65,7 +65,7 @@ function importData(event) {
         }
       });
 
-      await browserAPI.storage.local.set({
+      await browserAPI.storage.sync.set({
         whitelist: whitelist,
         blockedCountries: countryBlock,
       });

@@ -57,11 +57,11 @@ function createWarningBar(domain) {
   document
     .getElementById("whitelist-btn")
     .addEventListener("click", async () => {
-      const result = await browserAPI.storage.local.get(["whitelist"]);
+      const result = await browserAPI.storage.sync.get(["whitelist"]);
       const whitelist = result.whitelist || [];
       if (!whitelist.includes(domain)) {
         whitelist.push(domain);
-        browserAPI.storage.local.set({ whitelist });
+        browserAPI.storage.sync.set({ whitelist });
       }
       warningBar.remove();
     });
@@ -70,12 +70,12 @@ function createWarningBar(domain) {
   document
     .getElementById("wildcard-whitelist-btn")
     .addEventListener("click", () => {
-      const result = browserAPI.storage.local.get(["whitelist"]);
+      const result = browserAPI.storage.sync.get(["whitelist"]);
       const whitelist = result.whitelist || [];
       const wildcardDomain = `*.${rootDomain}`;
       if (!whitelist.includes(wildcardDomain)) {
         whitelist.push(wildcardDomain);
-        browserAPI.storage.local.set({ whitelist });
+        browserAPI.storage.sync.set({ whitelist });
       }
       warningBar.remove();
     });
@@ -88,7 +88,7 @@ function createWarningBar(domain) {
 async function checkDomain() {
   const currentDomain = getDomain(window.location.href);
 
-  const result = await browserAPI.storage.local.get(["whitelist"]);
+  const result = await browserAPI.storage.sync.get(["whitelist"]);
   const whitelist = result.whitelist || [];
 
   if (!isWhitelisted(currentDomain, whitelist)) {

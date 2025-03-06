@@ -38,31 +38,31 @@ function loadCountries() {
 async function blockCountry(country) {
   const countrySelect = document.getElementById("country-select");
 
-  const result = await browserAPI.storage.local.get(["blockedCountries"]);
+  const result = await browserAPI.storage.sync.get(["blockedCountries"]);
   const blockedCountries = result.blockedCountries || [];
   if (!blockedCountries.includes(country)) {
     blockedCountries.push(country);
-    await browserAPI.storage.local.set({ blockedCountries });
+    await browserAPI.storage.sync.set({ blockedCountries });
     loadBlockedCountries();
     countrySelect.value = ""; // Reset selection
   }
 }
 
 async function removeCountry(coutryCode) {
-  const result = await browserAPI.storage.local.get(["blockedCountries"]);
+  const result = await browserAPI.storage.sync.get(["blockedCountries"]);
   const blockedCountries = result.blockedCountries || [];
   const updatedCountries = blockedCountries.filter(
     (c) => JSON.parse(c).code !== coutryCode,
   );
 
-  await browserAPI.storage.local.set({
+  await browserAPI.storage.sync.set({
     blockedCountries: updatedCountries,
   });
   loadBlockedCountries();
 }
 
 async function loadBlockedCountries() {
-  const result = await browserAPI.storage.local.get(["blockedCountries"]);
+  const result = await browserAPI.storage.sync.get(["blockedCountries"]);
   const blockedCountries = result.blockedCountries || [];
   const blockedCountriesElement = document.getElementById("blocked-countries");
   blockedCountriesElement.innerHTML = "";

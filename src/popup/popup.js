@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function loadToggleState() {
-  const result = await browserAPI.storage.local.get([
+  const result = await browserAPI.storage.sync.get([
     "enablePreemptiveChecks",
     "enableCountryBlock",
   ]);

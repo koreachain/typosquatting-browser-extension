@@ -1,6 +1,39 @@
 // Use the appropriate API based on browser environment
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
+// Helper function to safely get storage with fallback
+async function getStorageWithFallback(keys) {
+  try {
+    const result = await browserAPI.storage.sync.get(keys);
+    return result;
+  } catch (error) {
+    console.warn('Sync storage failed, falling back to local storage:', error);
+    try {
+      return await browserAPI.storage.local.get(keys);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      return {};
+    }
+  }
+}
+
+// Helper function to safely set storage with fallback
+async function setStorageWithFallback(data) {
+  try {
+    await browserAPI.storage.sync.set(data);
+    // Also save to local storage as backup
+    await browserAPI.storage.local.set(data);
+  } catch (error) {
+    console.warn('Sync storage failed, using local storage only:', error);
+    try {
+      await browserAPI.storage.local.set(data);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      throw localError;
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Load and display whitelist
   loadWhitelist();
@@ -93,16 +126,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function loadToggleState() {
-  const result = await browserAPI.storage.sync.get([
-    "enablePreemptiveChecks",
-    "enableCountryBlock",
-  ]);
-  document.getElementById("preemptive-check-toggle").checked =
-    result.enablePreemptiveChecks === undefined
-      ? true
-      : result.enablePreemptiveChecks;
-  document.getElementById("country-block-toggle").checked =
-    result.enableCountryBlock === undefined ? true : result.enableCountryBlock;
+  try {
+    const result = await getStorageWithFallback([
+      "enablePreemptiveChecks",
+      "enableCountryBlock",
+    ]);
+    document.getElementById("preemptive-check-toggle").checked =
+      result.enablePreemptiveChecks === undefined
+        ? true
+        : result.enablePreemptiveChecks;
+    document.getElementById("country-block-toggle").checked =
+      result.enableCountryBlock === undefined ? true : result.enableCountryBlock;
+  } catch (error) {
+    console.error('Failed to load toggle state:', error);
+    // Set defaults if loading fails
+    document.getElementById("preemptive-check-toggle").checked = true;
+    document.getElementById("country-block-toggle").checked = true;
+  }
 }
 
 function togglePreemptiveChecks(enabled) {

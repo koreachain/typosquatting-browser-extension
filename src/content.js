@@ -2,6 +2,39 @@
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 let warningBar = null;
 
+// Helper function to safely get storage with fallback
+async function getStorageWithFallback(keys) {
+  try {
+    const result = await browserAPI.storage.sync.get(keys);
+    return result;
+  } catch (error) {
+    console.warn('Sync storage failed, falling back to local storage:', error);
+    try {
+      return await browserAPI.storage.local.get(keys);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      return {};
+    }
+  }
+}
+
+// Helper function to safely set storage with fallback
+async function setStorageWithFallback(data) {
+  try {
+    await browserAPI.storage.sync.set(data);
+    // Also save to local storage as backup
+    await browserAPI.storage.local.set(data);
+  } catch (error) {
+    console.warn('Sync storage failed, using local storage only:', error);
+    try {
+      await browserAPI.storage.local.set(data);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      throw localError;
+    }
+  }
+}
+
 function getDomain(url) {
   try {
     const urlObj = new URL(url);
@@ -57,27 +90,35 @@ function createWarningBar(domain) {
   document
     .getElementById("whitelist-btn")
     .addEventListener("click", async () => {
-      const result = await browserAPI.storage.sync.get(["whitelist"]);
-      const whitelist = result.whitelist || [];
-      if (!whitelist.includes(domain)) {
-        whitelist.push(domain);
-        browserAPI.storage.sync.set({ whitelist });
+      try {
+        const result = await getStorageWithFallback(["whitelist"]);
+        const whitelist = result.whitelist || [];
+        if (!whitelist.includes(domain)) {
+          whitelist.push(domain);
+          await setStorageWithFallback({ whitelist });
+        }
+        warningBar.remove();
+      } catch (error) {
+        console.error('Failed to whitelist domain:', error);
       }
-      warningBar.remove();
     });
 
   // Add wildcard whitelist button listener
   document
     .getElementById("wildcard-whitelist-btn")
-    .addEventListener("click", () => {
-      const result = browserAPI.storage.sync.get(["whitelist"]);
-      const whitelist = result.whitelist || [];
-      const wildcardDomain = `*.${rootDomain}`;
-      if (!whitelist.includes(wildcardDomain)) {
-        whitelist.push(wildcardDomain);
-        browserAPI.storage.sync.set({ whitelist });
+    .addEventListener("click", async () => {
+      try {
+        const result = await getStorageWithFallback(["whitelist"]);
+        const whitelist = result.whitelist || [];
+        const wildcardDomain = `*.${rootDomain}`;
+        if (!whitelist.includes(wildcardDomain)) {
+          whitelist.push(wildcardDomain);
+          await setStorageWithFallback({ whitelist });
+        }
+        warningBar.remove();
+      } catch (error) {
+        console.error('Failed to whitelist wildcard domain:', error);
       }
-      warningBar.remove();
     });
 
   document.getElementById("close-warning-btn").addEventListener("click", () => {
@@ -86,13 +127,17 @@ function createWarningBar(domain) {
 }
 
 async function checkDomain() {
-  const currentDomain = getDomain(window.location.href);
+  try {
+    const currentDomain = getDomain(window.location.href);
 
-  const result = await browserAPI.storage.sync.get(["whitelist"]);
-  const whitelist = result.whitelist || [];
+    const result = await getStorageWithFallback(["whitelist"]);
+    const whitelist = result.whitelist || [];
 
-  if (!isWhitelisted(currentDomain, whitelist)) {
-    createWarningBar(currentDomain);
+    if (!isWhitelisted(currentDomain, whitelist)) {
+      createWarningBar(currentDomain);
+    }
+  } catch (error) {
+    console.error('Failed to check domain:', error);
   }
 }
 

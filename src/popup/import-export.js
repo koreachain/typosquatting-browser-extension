@@ -1,21 +1,59 @@
-async function exportData() {
-  const resultWhiteList = await browserAPI.storage.sync.get(["whitelist"]);
-  const whitelist = resultWhiteList.whitelist || [];
-  const resultCountryBlock = await browserAPI.storage.sync.get([
-    "blockedCountries",
-  ]);
-  const countryBlock = resultCountryBlock.blockedCountries || [];
-  const dataStr = JSON.stringify({ whitelist, countryBlock }, null, 2);
-  const dataUri =
-    "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+// Helper function to safely get storage with fallback
+async function getStorageWithFallback(keys) {
+  try {
+    const result = await browserAPI.storage.sync.get(keys);
+    return result;
+  } catch (error) {
+    console.warn('Sync storage failed, falling back to local storage:', error);
+    try {
+      return await browserAPI.storage.local.get(keys);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      return {};
+    }
+  }
+}
 
-  const exportLink = document.createElement("a");
-  exportLink.setAttribute("href", dataUri);
-  exportLink.setAttribute(
-    "download",
-    "whitelist_domains_" + new Date().toISOString().split("T")[0] + ".json",
-  );
-  exportLink.click();
+// Helper function to safely set storage with fallback
+async function setStorageWithFallback(data) {
+  try {
+    await browserAPI.storage.sync.set(data);
+    // Also save to local storage as backup
+    await browserAPI.storage.local.set(data);
+  } catch (error) {
+    console.warn('Sync storage failed, using local storage only:', error);
+    try {
+      await browserAPI.storage.local.set(data);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      throw localError;
+    }
+  }
+}
+
+async function exportData() {
+  try {
+    const resultWhiteList = await getStorageWithFallback(["whitelist"]);
+    const whitelist = resultWhiteList.whitelist || [];
+    const resultCountryBlock = await getStorageWithFallback([
+      "blockedCountries",
+    ]);
+    const countryBlock = resultCountryBlock.blockedCountries || [];
+    const dataStr = JSON.stringify({ whitelist, countryBlock }, null, 2);
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+    const exportLink = document.createElement("a");
+    exportLink.setAttribute("href", dataUri);
+    exportLink.setAttribute(
+      "download",
+      "whitelist_domains_" + new Date().toISOString().split("T")[0] + ".json",
+    );
+    exportLink.click();
+  } catch (error) {
+    console.error('Failed to export data:', error);
+    alert("Failed to export data. Please try again.");
+  }
 }
 
 function importData(event) {
@@ -43,7 +81,7 @@ function importData(event) {
         return;
       }
 
-      const result = await browserAPI.storage.sync.get([
+      const result = await getStorageWithFallback([
         "whitelist",
         "blockedCountries",
       ]);
@@ -65,7 +103,7 @@ function importData(event) {
         }
       });
 
-      await browserAPI.storage.sync.set({
+      await setStorageWithFallback({
         whitelist: whitelist,
         blockedCountries: countryBlock,
       });
@@ -77,6 +115,7 @@ function importData(event) {
         `Successfully imported ${importedData.whitelist.length} domains and ${importedData.countryBlock.length} blocked countries.`,
       );
     } catch (error) {
+      console.error('Failed to import data:', error);
       alert("Error parsing the imported file: " + error.message);
     }
   };

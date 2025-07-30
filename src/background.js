@@ -5,20 +5,101 @@ let enablePreemptiveChecks = true;
 let enableCountryBlock = true;
 let sessionAllowedDomains = [];
 
-browserAPI.runtime.onInstalled.addListener(() => {
-  // Initialize with empty whitelist and enabled preemptive checks
-  const result = browserAPI.storage.sync.get([
-    "whitelist",
-    "enablePreemptiveChecks",
-  ]);
-  if (!result.whitelist) {
-    browserAPI.storage.sync.set({ whitelist: [] });
+// Helper function to safely get storage with fallback
+async function getStorageWithFallback(keys) {
+  try {
+    const result = await browserAPI.storage.sync.get(keys);
+    return result;
+  } catch (error) {
+    console.warn('Sync storage failed, falling back to local storage:', error);
+    try {
+      return await browserAPI.storage.local.get(keys);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      return {};
+    }
   }
-  if (result.enablePreemptiveChecks === undefined) {
-    browserAPI.storage.sync.set({ enablePreemptiveChecks: true });
+}
+
+// Helper function to safely set storage with fallback
+async function setStorageWithFallback(data) {
+  try {
+    await browserAPI.storage.sync.set(data);
+    // Also save to local storage as backup
+    await browserAPI.storage.local.set(data);
+  } catch (error) {
+    console.warn('Sync storage failed, using local storage only:', error);
+    try {
+      await browserAPI.storage.local.set(data);
+    } catch (localError) {
+      console.error('Both sync and local storage failed:', localError);
+      throw localError;
+    }
   }
-  if (result.enableCountryBlock === undefined) {
-    browserAPI.storage.sync.set({ enableCountryBlock: true });
+}
+
+browserAPI.runtime.onInstalled.addListener(async () => {
+  try {
+    // Initialize with empty whitelist and enabled preemptive checks
+    const result = await browserAPI.storage.sync.get([
+      "whitelist",
+      "enablePreemptiveChecks",
+      "enableCountryBlock",
+      "blockedCountries"
+    ]);
+    
+    const updates = {};
+    
+    if (!result.whitelist) {
+      updates.whitelist = [];
+    }
+    if (result.enablePreemptiveChecks === undefined) {
+      updates.enablePreemptiveChecks = true;
+    }
+    if (result.enableCountryBlock === undefined) {
+      updates.enableCountryBlock = true;
+    }
+    if (!result.blockedCountries) {
+      updates.blockedCountries = [];
+    }
+    
+    // Only update storage if there are changes needed
+    if (Object.keys(updates).length > 0) {
+      await browserAPI.storage.sync.set(updates);
+    }
+  } catch (error) {
+    console.error('Failed to initialize extension settings:', error);
+    
+    // Fallback to local storage if sync fails
+    try {
+      const localResult = await browserAPI.storage.local.get([
+        "whitelist",
+        "enablePreemptiveChecks", 
+        "enableCountryBlock",
+        "blockedCountries"
+      ]);
+      
+      const localUpdates = {};
+      
+      if (!localResult.whitelist) {
+        localUpdates.whitelist = [];
+      }
+      if (localResult.enablePreemptiveChecks === undefined) {
+        localUpdates.enablePreemptiveChecks = true;
+      }
+      if (localResult.enableCountryBlock === undefined) {
+        localUpdates.enableCountryBlock = true;
+      }
+      if (!localResult.blockedCountries) {
+        localUpdates.blockedCountries = [];
+      }
+      
+      if (Object.keys(localUpdates).length > 0) {
+        await browserAPI.storage.local.set(localUpdates);
+      }
+    } catch (localError) {
+      console.error('Failed to initialize extension settings with local storage:', localError);
+    }
   }
 });
 
@@ -32,7 +113,7 @@ browserAPI.webNavigation.onCommitted.addListener((details) => {
 
 // Geolocation Checks
 async function checkIPGeolocation(url) {
-  const result = await browserAPI.storage.sync.get(["enableCountryBlock"]);
+  const result = await getStorageWithFallback(["enableCountryBlock"]);
   if (!result.enableCountryBlock) {
     return {
       status: "disabled",
@@ -62,7 +143,7 @@ async function checkIPGeolocation(url) {
 }
 
 async function assessGeographicalRisk(countryCode) {
-  const result = await browserAPI.storage.sync.get(["blockedCountries"]);
+  const result = await getStorageWithFallback(["blockedCountries"]);
   const blockedCountries = result.blockedCountries || [];
 
   if (blockedCountries.map((c) => JSON.parse(c).code).includes(countryCode)) {
@@ -97,7 +178,7 @@ function isWhitelisted(domain, whitelist) {
 }
 
 async function checkTabNavigation(tabId, url) {
-  const result = await browserAPI.storage.sync.get([
+  const result = await getStorageWithFallback([
     "whitelist",
     "enablePreemptiveChecks",
   ]);
@@ -145,23 +226,35 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     browserAPI.tabs.update(message.tabId, { url: message.url });
   } else if (message.action === "whitelistAndContinue") {
     // Add domain to global whitelist
-    browserAPI.storage.sync.get(["whitelist"]).then((result) => {
+    getStorageWithFallback(["whitelist"]).then((result) => {
       const whitelist = result.whitelist || [];
       if (!whitelist.includes(message.domain)) {
         whitelist.push(message.domain);
-        browserAPI.storage.sync.set({ whitelist }).then(() => {
+        setStorageWithFallback({ whitelist }).then(() => {
+          browserAPI.tabs.update(message.tabId, { url: message.url });
+        }).catch((error) => {
+          console.error('Failed to save whitelist:', error);
+          // Still navigate even if save failed
           browserAPI.tabs.update(message.tabId, { url: message.url });
         });
       } else {
         browserAPI.tabs.update(message.tabId, { url: message.url });
       }
+    }).catch((error) => {
+      console.error('Failed to get whitelist:', error);
+      // Still navigate even if storage failed
+      browserAPI.tabs.update(message.tabId, { url: message.url });
     });
   } else if (message.action === "exitNavigation") {
     browserAPI.tabs.remove(message.tabId);
   } else if (message.action === "togglePreemptiveChecks") {
-    browserAPI.storage.sync.set({ enablePreemptiveChecks: message.enabled });
+    setStorageWithFallback({ enablePreemptiveChecks: message.enabled }).catch((error) => {
+      console.error('Failed to save preemptive checks setting:', error);
+    });
   } else if (message.action === "toggleCountryBlock") {
-    browserAPI.storage.sync.set({ enableCountryBlock: message.enabled });
+    setStorageWithFallback({ enableCountryBlock: message.enabled }).catch((error) => {
+      console.error('Failed to save country block setting:', error);
+    });
   } else if (message.action === "securityCheck") {
     // Handle security check requests
     Promise.all([checkIPGeolocation(message.url)])

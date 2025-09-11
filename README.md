@@ -83,10 +83,10 @@ domain-whitelist-protector/src/
 
 ```bash
 # Clone the repository
-git clone https://github.com/infnada/typosquatting-protect.git
+git clone https://github.com/koreachain/typosquatting-browser-extension.git
 
 # Navigate to the directory
-cd typosquatting-protect
+cd typosquatting-browser-extension
 
 # Build the extension
 node scripts/build.js build

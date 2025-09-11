@@ -27,13 +27,13 @@ A browser extension that protects against typosquatting and phishing by showing 
 
 ## 🚀 Installation
 
-### Chrome Web Store
+### Chrome
 
 <a href="https://github.com/koreachain/typosquatting-browser-extension/releases">
   <img src="assets/download-chrome.svg" alt="Chrome Install" width="480"/>
 </a>
 
-### Mozilla Add-ons
+### Firefox
 
 <a href="https://github.com/koreachain/typosquatting-browser-extension/releases">
   <img src="assets/download-firefox.svg" alt="Firefox Install" width="480"/>

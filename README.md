@@ -29,11 +29,15 @@ A browser extension that protects against typosquatting and phishing by showing 
 
 ### Chrome Web Store
 
-[![Chrome Web Store](assets/download-chrome.svg)](https://chrome.google.com/webstore/)
+<a href="https://github.com/koreachain/typosquatting-browser-extension/releases">
+  <img src="assets/download-chrome.svg" alt="Chrome Install" width="480"/>
+</a>
 
 ### Mozilla Add-ons
 
-[![Firefox Add-ons](assets/download-firefox.svg)](https://addons.mozilla.org/en-US/firefox/addon/domain-whitelist-protector/)
+<a href="https://github.com/koreachain/typosquatting-browser-extension/releases">
+  <img src="assets/download-firefox.svg" alt="Firefox Install" width="480"/>
+</a>
 
 ## 🛠️ Manual Installation
 
@@ -67,7 +71,7 @@ This extension:
 ### Project Structure
 
 ```
-domain-whitelist-protector/src/
+typosquatting-browser-extension/src/
 ├── manifest.json        # Extension configuration
 ├── background.js        # Main extension logic
 ├── content.js           # Content script for warning bar

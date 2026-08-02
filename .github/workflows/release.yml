@@ -3,8 +3,6 @@ name: Browser Extension Build and Release
 on:
   push:
     branches: [ "main", "master" ]
-    tags:
-      - 'v*'
   pull_request:
     branches: [ "main", "master" ]
 
@@ -57,10 +55,24 @@ jobs:
     needs: build
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version tag
+        id: version
+        run: |
+          # Get current date in YYYY-MM-DD format
+          DATE=$(date +"%Y-%m-%d")
+          # Get short commit hash
+          COMMIT=$(git rev-parse --short HEAD)
+          # Create version tag
+          VERSION="v${DATE}+git.${COMMIT}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
 
       - name: Download Chrome Extension
         uses: actions/download-artifact@v4
@@ -77,6 +89,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: "Release ${{ steps.version.outputs.version }}"
           files: |
             dist/chrome-extension.zip
             dist/firefox-extension.zip

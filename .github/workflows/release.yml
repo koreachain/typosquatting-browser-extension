@@ -65,12 +65,8 @@ jobs:
       - name: Generate version tag
         id: version
         run: |
-          # Get current date in YYYY-MM-DD format
-          DATE=$(date +"%Y-%m-%d")
-          # Get short commit hash
           COMMIT=$(git rev-parse --short HEAD)
-          # Create version tag
-          VERSION="v${DATE}.${COMMIT}"
+          VERSION="v${{ github.run_number }}.${COMMIT}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
 

@@ -144,7 +144,7 @@ async function addToWhitelist(entry) {
 }
 
 /**
- * Inject warning bar UI at top of page body
+ * Inject toast notification at top-right of page
  */
 function createWarningBar(domain) {
   if (warningBar) {
@@ -158,21 +158,38 @@ function createWarningBar(domain) {
   warningBar = document.createElement("div");
   warningBar.id = "whitelist-warning-bar";
   warningBar.innerHTML = `
-    <span class="warning-text">⚠️ Non-whitelisted domain: <strong>${safeDomain}</strong> could be insecure</span>
-    <button id="whitelist-btn">Whitelist this domain</button>
-    <button id="wildcard-whitelist-btn">Whitelist *.${safeRootDomain}</button>
+    <span class="warning-text">⚠️ <strong>${safeDomain}</strong> not whitelisted</span>
+    <button id="whitelist-btn">Whitelist</button>
+    <button id="wildcard-whitelist-btn">*.${safeRootDomain}</button>
     <button id="close-warning-btn">×</button>
   `;
 
-  document.body.insertBefore(warningBar, document.body.firstChild);
+  document.body.appendChild(warningBar);
 
-  // Bind events scoped directly to the newly created element (faster & safer than document.getElementById)
+  // Bind events scoped directly to the newly created element
   warningBar.querySelector("#whitelist-btn")?.addEventListener("click", () => addToWhitelist(domain));
   warningBar.querySelector("#wildcard-whitelist-btn")?.addEventListener("click", () => addToWhitelist(`*.${rootDomain}`));
-  warningBar.querySelector("#close-warning-btn")?.addEventListener("click", () => {
-    warningBar?.remove();
-    warningBar = null;
-  });
+  warningBar.querySelector("#close-warning-btn")?.addEventListener("click", () => dismissToast());
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (warningBar) {
+      dismissToast();
+    }
+  }, 10000);
+}
+
+/**
+ * Dismiss toast with slide-out animation
+ */
+function dismissToast() {
+  if (warningBar) {
+    warningBar.style.animation = "slideOut 0.3s ease-in forwards";
+    setTimeout(() => {
+      warningBar?.remove();
+      warningBar = null;
+    }, 300);
+  }
 }
 
 /**

@@ -5,43 +5,31 @@ let enablePreemptiveChecks = true;
 let enableCountryBlock = true;
 let sessionAllowedDomains = [];
 
-// Helper function to safely get storage with fallback
+// Helper function to safely get storage
 async function getStorageWithFallback(keys) {
   try {
-    const result = await browserAPI.storage.sync.get(keys);
+    const result = await browserAPI.storage.local.get(keys);
     return result;
   } catch (error) {
-    console.warn('Sync storage failed, falling back to local storage:', error);
-    try {
-      return await browserAPI.storage.local.get(keys);
-    } catch (localError) {
-      console.error('Both sync and local storage failed:', localError);
-      return {};
-    }
+    console.error('Failed to get from local storage:', error);
+    return {};
   }
 }
 
-// Helper function to safely set storage with fallback
+// Helper function to safely set storage
 async function setStorageWithFallback(data) {
   try {
-    await browserAPI.storage.sync.set(data);
-    // Also save to local storage as backup
     await browserAPI.storage.local.set(data);
   } catch (error) {
-    console.warn('Sync storage failed, using local storage only:', error);
-    try {
-      await browserAPI.storage.local.set(data);
-    } catch (localError) {
-      console.error('Both sync and local storage failed:', localError);
-      throw localError;
-    }
+    console.error('Failed to set local storage:', error);
+    throw error;
   }
 }
 
 browserAPI.runtime.onInstalled.addListener(async () => {
   try {
     // Initialize with empty whitelist and enabled preemptive checks
-    const result = await browserAPI.storage.sync.get([
+    const result = await browserAPI.storage.local.get([
       "whitelist",
       "enablePreemptiveChecks",
       "enableCountryBlock",
@@ -65,41 +53,10 @@ browserAPI.runtime.onInstalled.addListener(async () => {
     
     // Only update storage if there are changes needed
     if (Object.keys(updates).length > 0) {
-      await browserAPI.storage.sync.set(updates);
+      await browserAPI.storage.local.set(updates);
     }
   } catch (error) {
     console.error('Failed to initialize extension settings:', error);
-    
-    // Fallback to local storage if sync fails
-    try {
-      const localResult = await browserAPI.storage.local.get([
-        "whitelist",
-        "enablePreemptiveChecks", 
-        "enableCountryBlock",
-        "blockedCountries"
-      ]);
-      
-      const localUpdates = {};
-      
-      if (!localResult.whitelist) {
-        localUpdates.whitelist = [];
-      }
-      if (localResult.enablePreemptiveChecks === undefined) {
-        localUpdates.enablePreemptiveChecks = true;
-      }
-      if (localResult.enableCountryBlock === undefined) {
-        localUpdates.enableCountryBlock = true;
-      }
-      if (!localResult.blockedCountries) {
-        localUpdates.blockedCountries = [];
-      }
-      
-      if (Object.keys(localUpdates).length > 0) {
-        await browserAPI.storage.local.set(localUpdates);
-      }
-    } catch (localError) {
-      console.error('Failed to initialize extension settings with local storage:', localError);
-    }
   }
 });
 

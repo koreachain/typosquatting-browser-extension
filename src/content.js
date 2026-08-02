@@ -171,12 +171,12 @@ function createWarningBar(domain) {
   warningBar.querySelector("#wildcard-whitelist-btn")?.addEventListener("click", () => addToWhitelist(`*.${rootDomain}`));
   warningBar.querySelector("#close-warning-btn")?.addEventListener("click", () => dismissToast());
 
-  // Auto-dismiss after 10 seconds
+  // Auto-dismiss after 15 seconds
   setTimeout(() => {
     if (warningBar) {
       dismissToast();
     }
-  }, 10000);
+  }, 15000);
 }
 
 /**

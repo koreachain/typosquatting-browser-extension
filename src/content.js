@@ -2,6 +2,11 @@
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 let warningBar = null;
 
+// Cache for whitelist to avoid repeated storage reads
+let cachedWhitelist = null;
+let whitelistCacheTimestamp = 0;
+const CACHE_TTL = 5000; // 5 seconds cache TTL
+
 // Helper function to safely get storage
 async function getStorageWithFallback(keys) {
   try {
@@ -21,6 +26,19 @@ async function setStorageWithFallback(data) {
     console.error('Failed to set local storage:', error);
     throw error;
   }
+}
+
+// Get whitelist with caching
+async function getWhitelist() {
+  const now = Date.now();
+  if (cachedWhitelist !== null && (now - whitelistCacheTimestamp) < CACHE_TTL) {
+    return cachedWhitelist;
+  }
+  
+  const result = await getStorageWithFallback(["whitelist"]);
+  cachedWhitelist = result.whitelist || [];
+  whitelistCacheTimestamp = now;
+  return cachedWhitelist;
 }
 
 function getDomain(url) {
@@ -79,11 +97,12 @@ function createWarningBar(domain) {
     .getElementById("whitelist-btn")
     .addEventListener("click", async () => {
       try {
-        const result = await getStorageWithFallback(["whitelist"]);
-        const whitelist = result.whitelist || [];
+        const whitelist = await getWhitelist();
         if (!whitelist.includes(domain)) {
           whitelist.push(domain);
           await setStorageWithFallback({ whitelist });
+          // Update cache
+          cachedWhitelist = whitelist;
         }
         warningBar.remove();
       } catch (error) {
@@ -96,12 +115,13 @@ function createWarningBar(domain) {
     .getElementById("wildcard-whitelist-btn")
     .addEventListener("click", async () => {
       try {
-        const result = await getStorageWithFallback(["whitelist"]);
-        const whitelist = result.whitelist || [];
+        const whitelist = await getWhitelist();
         const wildcardDomain = `*.${rootDomain}`;
         if (!whitelist.includes(wildcardDomain)) {
           whitelist.push(wildcardDomain);
           await setStorageWithFallback({ whitelist });
+          // Update cache
+          cachedWhitelist = whitelist;
         }
         warningBar.remove();
       } catch (error) {
@@ -117,9 +137,7 @@ function createWarningBar(domain) {
 async function checkDomain() {
   try {
     const currentDomain = getDomain(window.location.href);
-
-    const result = await getStorageWithFallback(["whitelist"]);
-    const whitelist = result.whitelist || [];
+    const whitelist = await getWhitelist();
 
     if (!isWhitelisted(currentDomain, whitelist)) {
       createWarningBar(currentDomain);
@@ -139,6 +157,9 @@ if (document.readyState === "loading") {
 // Listen for changes to the whitelist
 browserAPI.storage.onChanged.addListener((changes) => {
   if (changes.whitelist) {
+    // Invalidate cache when whitelist changes
+    cachedWhitelist = null;
+    whitelistCacheTimestamp = 0;
     checkDomain();
   }
 });

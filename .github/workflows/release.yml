@@ -70,7 +70,7 @@ jobs:
           # Get short commit hash
           COMMIT=$(git rev-parse --short HEAD)
           # Create version tag
-          VERSION="v${DATE}+git.${COMMIT}"
+          VERSION="v${DATE}.${COMMIT}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
 
@@ -103,16 +103,16 @@ jobs:
   #   name: Publish to Chrome Web Store
   #   runs-on: ubuntu-latest
   #   if: startsWith(github.ref, 'refs/tags/v')
-  #   
+  #
   #   steps:
   #     - uses: actions/checkout@v4
-  #     
+  #
   #     - name: Download Chrome Extension
   #       uses: actions/download-artifact@v4
   #       with:
   #         name: chrome-extension
   #         path: dist
-  #     
+  #
   #     - name: Publish to Chrome Web Store
   #       uses: mobilefirstllc/cws-publish@latest
   #       with:
@@ -128,16 +128,16 @@ jobs:
   #   name: Publish to Firefox Add-ons
   #   runs-on: ubuntu-latest
   #   if: startsWith(github.ref, 'refs/tags/v')
-  #   
+  #
   #   steps:
   #     - uses: actions/checkout@v4
-  #     
+  #
   #     - name: Download Firefox Extension
   #       uses: actions/download-artifact@v4
   #       with:
   #         name: firefox-extension
   #         path: dist
-  #     
+  #
   #     - name: Submit to Firefox Add-ons
   #       uses: trmcnvn/firefox-addon@v1
   #       with:

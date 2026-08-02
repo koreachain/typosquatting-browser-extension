@@ -65,8 +65,7 @@ jobs:
       - name: Generate version tag
         id: version
         run: |
-          COMMIT=$(git rev-parse --short HEAD)
-          VERSION="v${{ github.run_number }}.${COMMIT}"
+          VERSION="v${{ github.run_number }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
 

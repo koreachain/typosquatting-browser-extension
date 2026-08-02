@@ -73,10 +73,37 @@ function createWarningBar(domain) {
   }
 
   // Get root domain for wildcard suggestion
+  // For domains like google.com.br, we want to extract google.com.br, not com.br
   const domainParts = domain.split(".");
   let rootDomain = domain;
-  if (domainParts.length > 2) {
-    rootDomain = domainParts.slice(domainParts.length - 2).join(".");
+  
+  // Common country-code TLDs to help identify ccSLDs
+  const ccTLDs = new Set([
+    "br", "uk", "au", "jp", "de", "fr", "it", "es", "nl", "ru", 
+    "cn", "in", "ca", "mx", "kr", "pl", "se", "no", "dk", "fi",
+    "at", "ch", "be", "ie", "nz", "za", "ar", "cl", "co", "ve",
+    "sg", "hk", "tw", "th", "ph", "my", "id", "vn", "eg", "sa",
+    "ae", "il", "tr", "gr", "pt", "cz", "ro", "hu", "bg", "hr",
+    "sk", "si", "ee", "lv", "lt", "lu", "mt", "cy"
+  ]);
+  
+  if (domainParts.length === 2) {
+    // Simple domain like google.com - use as-is
+    rootDomain = domain;
+  } else if (domainParts.length === 3) {
+    // Could be www.google.com or google.com.br
+    const tld = domainParts[2].toLowerCase();
+    if (ccTLDs.has(tld)) {
+      // Likely a ccSLD like google.com.br - use all 3 parts
+      rootDomain = domain;
+    } else {
+      // Likely a subdomain like www.google.com - use last 2 parts
+      rootDomain = domainParts.slice(1).join(".");
+    }
+  } else if (domainParts.length >= 4) {
+    // For www.google.com.br (4 parts), use last 3 parts: google.com.br
+    // For a.b.google.com.br (5 parts), use last 3 parts: google.com.br
+    rootDomain = domainParts.slice(-3).join(".");
   }
 
   // Create warning bar with added wildcard option
